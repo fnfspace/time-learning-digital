@@ -37,6 +37,21 @@ const minute = [
   { text: "0:55", speech: "오십오 분" },
 ];
 
+let targetHour = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  // URL에서 week 파라미터 읽기
+  const params = new URLSearchParams(window.location.search);
+  const weekParam = params.get("week"); // "Week01" ~ "Week12"
+
+  if (weekParam) {
+    targetHour = parseInt(weekParam.replace("Week", ""), 10); // 1 ~ 12
+  }
+
+  // 이제 targetHour는 전역 변수처럼 사용 가능
+  // showStage3, showStage4, showStage5 안에서 targetHour를 참조하면 됨
+});
+
 function warmUpSpeechEngine() {
   const dummy = new SpeechSynthesisUtterance("준비");
   dummy.lang = "ko-KR";
@@ -133,8 +148,8 @@ function updateArrows() {
   const prevArrow = document.getElementById("prevArrow");
   const nextArrow = document.getElementById("nextArrow");
 
-  if (currentStage === 1 || currentStage === 3) {
-    // 1단계: 시 학습, 3단계: 시+분 학습
+  if (currentStage === 1) {
+    // 1단계: 시 학습
     if (currentIndex > 0) {
       prevArrow.style.visibility = "visible";
       prevArrow.onclick = () => {
@@ -181,8 +196,32 @@ function updateArrows() {
       nextArrow.onclick = null;
     }
 
+  } else if (currentStage === 3) {
+    // ✅ 3단계: 시+분 학습 (페이지네이션)
+    if (stage3PageIndex > 0) {
+      prevArrow.style.visibility = "visible";
+      prevArrow.onclick = () => {
+        stage3PageIndex--;
+        showStage3Page(stage3PageIndex);
+      };
+    } else {
+      prevArrow.style.visibility = "hidden";
+      prevArrow.onclick = null;
+    }
+
+    if (stage3PageIndex < stage3Pages.length - 1) {
+      nextArrow.style.visibility = "visible";
+      nextArrow.onclick = () => {
+        stage3PageIndex++;
+        showStage3Page(stage3PageIndex);
+      };
+    } else {
+      nextArrow.style.visibility = "hidden";
+      nextArrow.onclick = null;
+    }
+
   } else if (currentStage === 4) {
-    // 4단계: 정답 찾기 → stage4Index 기준
+    // 4단계: 정답 찾기
     if (stage4Index > 0) {
       prevArrow.style.visibility = "visible";
       prevArrow.onclick = () => {
@@ -204,8 +243,9 @@ function updateArrows() {
       nextArrow.style.visibility = "hidden";
       nextArrow.onclick = null;
     }
+
   } else if (currentStage === 5) {
-    // ✅ 5단계: 음성 → 시계 맞추기 → stage5Index 기준
+    // 5단계: 시계 맞추기
     if (stage5Index > 0) {
       prevArrow.style.visibility = "visible";
       prevArrow.onclick = () => {
@@ -279,14 +319,10 @@ function updateProgress() {
       break;
     }
     case 3: {
-      // hour 기준으로 표시: "3단계 · 1시 · 1/12" 형태
-      const total = Array.isArray(hour) ? hour.length : 0;
-      const safeIndex = Math.min(Math.max(currentIndex, 0), Math.max(total - 1, 0));
-      const current = safeIndex + 1;
-      const hourLabel = (Array.isArray(hour) && hour[safeIndex] && hour[safeIndex].text)
-        ? `${hour[safeIndex].text.split(":")[0]}시`
-        : "";
-      text = `${current}/${total}`;
+      // 3단계는 페이지네이션 기준으로 표시
+      const totalPages = stage3Pages?.length || 0;
+      const currentPage = stage3PageIndex + 1; // 0부터 시작하므로 +1
+      text = `${currentPage}/${totalPages}`;
       break;
     }
     case 4: {
@@ -397,63 +433,94 @@ function showStage2() {
 }
 
 // 3단계: 시, 분 학습
+// 페이지 관련 전역 변수
+let stage3Pages = [];
+let stage3PageIndex = 0;
+
 function showStage3() {
   const clockDisplay = document.getElementById("clockDisplay");
   const stage3 = document.getElementById("stage3");
-  const speakerArea = document.getElementById("speaker-icon"); // 추가
-  const optionsContainer = document.getElementById("options"); // 추가: 4/5단계 후보 제거
+  const speakerArea = document.getElementById("speaker-icon");
+  const optionsContainer = document.getElementById("options");
 
-  // 1,2단계 화면 숨기기 / 3단계 보이기
   clockDisplay.style.display = "none";
-  clockDisplay.textContent = ""; // 중앙에 남아있을 수 있는 텍스트 제거
-
-  // 3단계 영역 초기화 및 표시
+  clockDisplay.textContent = "";
   stage3.innerHTML = "";
   stage3.classList.remove("hidden");
 
-  // ✅ 스피커 아이콘 제거 (1/2단계에서 남아있던 것 방지)
   if (speakerArea) {
     speakerArea.innerHTML = "";
     speakerArea.style.visibility = "hidden";
     speakerArea.style.display = "none";
   }
-
-  // ✅ 4/5단계에서 남아있을 수 있는 후보 버튼 제거
   if (optionsContainer) {
     optionsContainer.innerHTML = "";
   }
 
-  const currentHour = hour[currentIndex]; // 현재 시 객체
+  // ✅ targetHour가 있으면 해당 시각만 표시
+  let currentHour;
+  if (targetHour) {
+    currentHour = hour.find(h => parseInt(h.text.split(":")[0], 10) === targetHour);
+  } else {
+    currentHour = hour[currentIndex]; // 기존 로직
+  }
 
-  // 정각(00분) 포함해서 hour + minute 조합
   const combinedTimesLocal = [
-    { text: currentHour.text, speech: currentHour.speech }, // 1:00, 2:00, ...
+    {
+      text: `${String(targetHour || currentHour.text.split(":")[0]).padStart(2,"0")}:00`,
+      speech: currentHour.speech
+    },
     ...minute.map(m => {
-      const [_, mText] = m.text.split(":"); // "0:05" → "05"
-      const newText = `${currentHour.text.split(":")[0]}:${mText}`;
+      const [_, mText] = m.text.split(":");
+      const newText = `${String(targetHour || currentHour.text.split(":")[0]).padStart(2,"0")}:${mText}`;
       const newSpeech = `${currentHour.speech} ${m.speech}`;
       return { text: newText, speech: newSpeech };
     })
   ];
 
-  // 그리드에 표시
-  combinedTimesLocal.forEach(item => {
-    const clockDiv = document.createElement("div");
-    clockDiv.className = "clock-item";
-    clockDiv.textContent = item.text;
+  // ✅ 페이지 단위로 나누기 (3개씩)
+  const itemsPerPage = 3;
+  stage3Pages = [];
+  for (let i = 0; i < combinedTimesLocal.length; i += itemsPerPage) {
+    stage3Pages.push(combinedTimesLocal.slice(i, i + itemsPerPage));
+  }
+  stage3PageIndex = 0;
 
-    clockDiv.onclick = () => {
-      speakWord(item.speech);
-    };
-
-    stage3.appendChild(clockDiv);
-  });
-
-  // 혹시 중앙 레이아웃을 위해 clockDisplay를 다시 사용해야 하면
-  // clockDisplay.style.display = "block"; // 필요 시 주석 해제
+  // 첫 페이지 표시
+  showStage3Page(stage3PageIndex);
 
   showArrows();
   updateProgress();
+}
+
+function showStage3Page(pageIndex) {
+  const stage3 = document.getElementById("stage3");
+  stage3.innerHTML = "";
+
+  stage3Pages[pageIndex].forEach(item => {
+    const clockDiv = document.createElement("div");
+    clockDiv.className = "clock-item";
+    clockDiv.textContent = item.text;
+    clockDiv.onclick = () => speakWord(item.speech);
+    stage3.appendChild(clockDiv);
+  });
+
+  updateArrows();
+  updateProgress();
+}
+
+// 화살표 네비게이션 제어
+function nextStage3Page() {
+  if (stage3PageIndex < stage3Pages.length - 1) {
+    stage3PageIndex++;
+    showStage3Page(stage3PageIndex);
+  }
+}
+function prevStage3Page() {
+  if (stage3PageIndex > 0) {
+    stage3PageIndex--;
+    showStage3Page(stage3PageIndex);
+  }
 }
 
 function showStage4() {
@@ -461,13 +528,10 @@ function showStage4() {
   const optionsContainer = document.getElementById("options");
   const stage3 = document.getElementById("stage3");
 
-  // 3단계 그리드 숨기기 + 내용 초기화
   stage3.classList.add("hidden");
   stage3.innerHTML = "";
-
   clockDisplay.style.display = "block";
 
-  // combinedTimesGlobal이 비어있으면 기본 생성
   if (combinedTimesGlobal.length === 0) {
     hour.forEach(h => {
       combinedTimesGlobal.push({ text: h.text, speech: h.speech });
@@ -480,12 +544,21 @@ function showStage4() {
     });
   }
 
-  // 문제 10개 랜덤 추출
-  stage4Questions = [];
-  for (let i = 0; i < 10; i++) {
-    const randomIndex = Math.floor(Math.random() * combinedTimesGlobal.length);
-    stage4Questions.push(combinedTimesGlobal[randomIndex]);
+  // ✅ targetHour가 있으면 해당 시각만 필터링
+  let filteredTimes = combinedTimesGlobal;
+  if (targetHour) {
+    filteredTimes = combinedTimesGlobal.filter(t =>
+      parseInt(t.text.split(":")[0], 10) === targetHour
+    );
   }
+
+  // ✅ 문제 개수 제한 (Week 있으면 5문제, 없으면 10문제)
+  const totalQuestions = targetHour ? 5 : 10;
+
+  // ✅ 중복 방지: 배열을 섞고 앞에서 totalQuestions만 선택
+  const shuffled = [...filteredTimes].sort(() => Math.random() - 0.5);
+  stage4Questions = shuffled.slice(0, totalQuestions);
+
   stage4Index = 0;
 
   showStage4Question();
@@ -496,28 +569,37 @@ function showStage4() {
 function showStage4Question() {
   const clockDisplay = document.getElementById("clockDisplay");
   const optionsContainer = document.getElementById("options");
-  const speakerArea = document.getElementById("speaker-icon"); // ✅ 스피커 영역 가져오기
+  const speakerArea = document.getElementById("speaker-icon");
   optionsContainer.innerHTML = "";
 
   const current = stage4Questions[stage4Index];
-  clockDisplay.textContent = current.text;
 
-  // ✅ 스피커 아이콘 생성 및 표시 (1단계 방식 그대로)
+  // ✅ 항상 두 자리 포맷으로 표시
+  const h = parseInt(current.text.split(":")[0], 10);
+  const m = parseInt(current.text.split(":")[1], 10);
+  const formatted = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  clockDisplay.textContent = formatted;
+
+  // 스피커 아이콘
   speakerArea.style.display = "block";
-  speakerArea.innerHTML = ""; // 기존 아이콘 제거
+  speakerArea.innerHTML = "";
   const speakerIcon = createSpeakerIcon(current.speech);
   speakerArea.appendChild(speakerIcon);
   speakerIcon.style.visibility = "visible";
+  speakerIcon.onclick = () => speakWord(current.speech);
 
-  // 클릭 시 정답 음성 출력
-  speakerIcon.onclick = () => {
-    speakWord(current.speech);
-  };
+  // ✅ 후보도 targetHour로 제한
+  let filteredTimes = combinedTimesGlobal;
+  if (targetHour) {
+    filteredTimes = combinedTimesGlobal.filter(t =>
+      parseInt(t.text.split(":")[0], 10) === targetHour
+    );
+  }
 
   // 보기: 정답 + 오답 2개
   const choices = [current.speech];
   while (choices.length < 3) {
-    const randomChoice = combinedTimesGlobal[Math.floor(Math.random() * combinedTimesGlobal.length)].speech;
+    const randomChoice = filteredTimes[Math.floor(Math.random() * filteredTimes.length)].speech;
     if (!choices.includes(randomChoice)) choices.push(randomChoice);
   }
   choices.sort(() => Math.random() - 0.5);
@@ -554,14 +636,11 @@ function showStage5() {
   const optionsContainer = document.getElementById("options");
   const stage3 = document.getElementById("stage3");
 
-  // 3단계 그리드 숨기기 + 초기화
   stage3.classList.add("hidden");
   stage3.innerHTML = "";
-
   clockDisplay.style.display = "block";
   optionsContainer.innerHTML = "";
 
-  // combinedTimesGlobal이 비어있으면 기본 생성 (4단계와 동일)
   if (combinedTimesGlobal.length === 0) {
     hour.forEach(h => {
       combinedTimesGlobal.push({ text: h.text, speech: h.speech });
@@ -574,12 +653,21 @@ function showStage5() {
     });
   }
 
-  // 문제 10개 랜덤 추출
-  stage5Questions = [];
-  for (let i = 0; i < 10; i++) {
-    const randomIndex = Math.floor(Math.random() * combinedTimesGlobal.length);
-    stage5Questions.push(combinedTimesGlobal[randomIndex]);
+  // ✅ targetHour가 있으면 해당 시각만 필터링
+  let filteredTimes = combinedTimesGlobal;
+  if (targetHour) {
+    filteredTimes = combinedTimesGlobal.filter(t =>
+      parseInt(t.text.split(":")[0], 10) === targetHour
+    );
   }
+
+  // ✅ 문제 개수 제한 (Week 있으면 5문제, 없으면 10문제)
+  const totalQuestions = targetHour ? 5 : 10;
+
+  // ✅ 중복 방지: 배열을 섞고 앞에서 totalQuestions만 선택
+  const shuffled = [...filteredTimes].sort(() => Math.random() - 0.5);
+  stage5Questions = shuffled.slice(0, totalQuestions);
+
   stage5Index = 0;
 
   showStage5Question();
@@ -602,32 +690,45 @@ function showStage5Question() {
   clockDisplay.textContent = "❓";
   clockDisplay.classList.add("question");
 
-  // ✅ 스피커 아이콘 생성 및 표시 (1단계 방식)
+  // 스피커 아이콘
   speakerArea.style.display = "block";
   speakerArea.innerHTML = "";
   const speakerIcon = createSpeakerIcon(current.speech);
   speakerArea.appendChild(speakerIcon);
   speakerIcon.style.visibility = "visible";
-  speakerIcon.onclick = () => {
-    speakWord(current.speech);
-  };
+  speakerIcon.onclick = () => speakWord(current.speech);
+
+  // ✅ 후보도 targetHour로 제한
+  let filteredTimes = combinedTimesGlobal;
+  if (targetHour) {
+    filteredTimes = combinedTimesGlobal.filter(t =>
+      parseInt(t.text.split(":")[0], 10) === targetHour
+    );
+  }
 
   // 보기: 정답 + 오답 2개
   const choices = [current.text];
   while (choices.length < 3) {
-    const randomChoice = combinedTimesGlobal[Math.floor(Math.random() * combinedTimesGlobal.length)].text;
+    const randomChoice = filteredTimes[Math.floor(Math.random() * filteredTimes.length)].text;
     if (!choices.includes(randomChoice)) choices.push(randomChoice);
   }
   choices.sort(() => Math.random() - 0.5);
 
   choices.forEach(choice => {
+    // ✅ 항상 두 자리 포맷으로 표시
+    const h = parseInt(choice.split(":")[0], 10);
+    const m = parseInt(choice.split(":")[1], 10);
+    const formatted = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+
     const btn = document.createElement("button");
-    btn.textContent = choice; // 시계 텍스트 표시
-    btn.classList.add("clock-choice"); // 버튼 크게 보이도록 클래스 추가
+    btn.textContent = formatted;
+    btn.classList.add("clock-choice");
 
     btn.onclick = () => {
       if (choice === current.text) {
         btn.classList.add("correct-circle");
+        clockDisplay.textContent = formatted; // 정답도 두 자리 포맷으로 표시
+
         setTimeout(() => {
           if (stage5Index < stage5Questions.length - 1) {
             stage5Index++;
