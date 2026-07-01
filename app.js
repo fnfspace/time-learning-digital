@@ -351,6 +351,9 @@ function showStage1() {
   const stage3 = document.getElementById("stage3"); // 3단계 그리드
   const optionsContainer = document.getElementById("options"); // ✅ 추가
 
+  // ✅ 4단계 전용 클래스 제거
+  clockDisplay.classList.remove("stage4");
+
   // 3단계 그리드 숨기기 + 내용 초기화
   stage3.classList.add("hidden");
   stage3.innerHTML = "";
@@ -394,6 +397,9 @@ function showStage2() {
   const speakerArea = document.getElementById("speaker-icon");
   const stage3 = document.getElementById("stage3");
   const optionsContainer = document.getElementById("options"); // ✅ 추가
+
+  // ✅ 4단계 전용 클래스 제거
+  clockDisplay.classList.remove("stage4");
 
   // 3단계 그리드 숨기기 + 내용 초기화
   stage3.classList.add("hidden");
@@ -531,6 +537,9 @@ function showStage4() {
   stage3.classList.add("hidden");
   stage3.innerHTML = "";
   clockDisplay.style.display = "block";
+
+  // ✅ 4단계 전용 클래스 추가
+  clockDisplay.classList.add("stage4");
 
   if (combinedTimesGlobal.length === 0) {
     hour.forEach(h => {
@@ -683,6 +692,9 @@ function showStage5Question() {
 
   const current = stage5Questions[stage5Index];
 
+  // ✅ 4단계 전용 클래스 추가
+  clockDisplay.classList.add("stage4");
+
   // 음성 출력
   speakWord(current.speech);
 
@@ -722,7 +734,6 @@ function showStage5Question() {
 
     const btn = document.createElement("button");
     btn.textContent = formatted;
-    btn.classList.add("clock-choice");
 
     btn.onclick = () => {
       if (choice === current.text) {

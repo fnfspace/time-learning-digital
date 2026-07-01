@@ -180,6 +180,16 @@ h2 {
   font-family: 'Courier New', monospace;
 }
 
+#clockDisplay.stage4 {
+  font-size: 18rem;
+  background-color: #000;
+  color: #ffffff;
+  padding: 50px 100px;
+  border-radius: 40px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.6);
+  font-family: 'Courier New', monospace;
+}
+
 /* 3단계용 레이아웃 */
 .grid-container {
   display: flex;              /* 가로로 나란히 */
@@ -247,6 +257,162 @@ h2 {
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-@media (max-width: 480px) {
-  .progress-indicator { font-size: 12px; padding: 5px 8px; top: 8px; right: 8px; }
+
+/* 📱 모바일 가로모드 (폭 1080px 이하 + landscape) */
+@media screen and (max-width: 1080px) and (orientation: landscape) {
+  .home-page {
+    height: auto;
+    padding-top: 0vh;          /* ✅ 맨 위 여백 제거 */
+    flex-direction: column;    /* 세로 배치 유지 */
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0px;
+  }
+
+  .page {
+    margin-top: 15px !important;  /* ✅ 기본 50px 여백 제거 */
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  h2 {
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;      /* 위쪽만 조금 주고 나머지는 0 */
+  }
+
+  /* 단계 제목과 부제목 크기 줄이기 */
+  #stage-main-title {
+    font-size: 1.5rem !important;  /* 원래 2.5rem → 줄임 */
+    margin-top: 10px;
+  }
+
+  #stage-subtitle {
+    font-size: 1rem !important;  /* 원래 2rem → 줄임 */
+    margin: 1px 0;
+  }
+
+  #home-icon {
+    font-size: 3rem !important;   /* 원래 5rem → 줄임 */
+    top: 10px;
+    left: 10px;
+  }
+
+  /* 네비게이션 화살표 크기 줄이기 */
+  .arrow.left {
+    border-width: 20px 30px 20px 0;   /* 원래 50px/60px → 줄임 */
+    margin-left: 10px;
+  }
+  .arrow.right {
+    border-width: 20px 0 20px 30px;
+    margin-right: 10px;
+  }
+
+  /* 스피커 아이콘 크기 줄이기 */
+  #speaker-icon {
+    font-size: 3rem !important;   /* 원래 5rem → 줄임 */
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .menu {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .menu button {
+    width: 170%;                /* 화면 폭에 맞게 */
+    height: 40px;
+    font-size: 12px;
+  }
+
+  .clock-icon {
+    font-size: 2.5rem;
+    margin-top: 3px; /* 아이콘을 살짝 아래로 내림 */
+  }
+
+  .progress-indicator {
+    font-size: 1rem;     /* 글씨 크기 키움 */
+    padding: 7px 15px;     /* 박스 크기 키움 */
+    border-radius: 8px;    /* 둥글기 조금 더 크게 */
+  }
+
+  #clockDisplay {
+    font-size: 4rem;     /* 글자 크기 줄이기 */
+    padding: 20px 40px;  /* 여백 줄이기 */
+    border-radius: 20px; /* 둥근 모서리 축소 */
+    width: fit-content;  /* 내용 크기에 맞게 */
+    margin: 0 auto;      /* 화면 중앙 배치 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .grid-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 한 줄에 3개 균등 배치 */
+    gap: 15px;                             /* 간격 조금 넓히기 */
+    justify-items: center;
+    align-items: center;
+    width: 85%;                            /* 전체 폭 조금 더 확보 */
+    padding: 10px;
+  }
+
+  .clock-item {
+    width: 100%;
+    max-width: 150px;   /* 박스 크기 키우기 */
+    font-size: 2.2rem;  /* 글자 크기 키우기 */
+    padding: 30px 25px;
+    border-radius: 30px;
+  }
+
+  .quiz-container {
+    position: static;              /* 중앙 고정 대신 자연스럽게 */
+    transform: none;               
+    display: flex;
+    flex-direction: column;        /* 세로 배치 유지 */
+    align-items: center;
+    justify-content: center;       /* 세로 중앙 정렬 */
+    gap: 20px;                     /* 간격 줄이기 */
+    height: 95vh;                 /* 화면 전체 높이 활용 */
+    padding: 20px;
+  }
+
+  #clockDisplay.stage4 {
+    font-size: 4rem;     /* 글자 크기 줄이기 */
+    padding: 20px 40px;  /* 여백 줄이기 */
+    border-radius: 20px; /* 둥근 모서리 축소 */
+    width: fit-content;  /* 내용 크기에 맞게 */
+    margin: 0 auto;      /* 화면 중앙 배치 */
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #options button {
+    width: 180px;       /* 버튼 폭 줄이기 */
+    height: 70px;       /* 버튼 높이 줄이기 */
+    padding: 10px;      /* 내부 여백 줄이기 */
+    font-size: 1.2rem;  /* 글자 크기 줄이기 */
+  }
+
+  /* 5단계 물음표 표시 크기 줄이기 */
+  #clockDisplay.question {
+    font-size: 4rem;   /* 기존보다 작게 */
+  }
 }
