@@ -330,7 +330,7 @@ h2 {
   }
 
   .clock-icon {
-    font-size: 2.5rem;
+    font-size: 1rem;
     margin-top: 3px; /* 아이콘을 살짝 아래로 내림 */
   }
 
@@ -365,7 +365,7 @@ h2 {
     gap: 15px;                             /* 간격 조금 넓히기 */
     justify-items: center;
     align-items: center;
-    width: 85%;                            /* 전체 폭 조금 더 확보 */
+    width: 80%;                            /* 전체 폭 조금 더 확보 */
     padding: 10px;
   }
 
@@ -373,7 +373,7 @@ h2 {
     width: 100%;
     max-width: 150px;   /* 박스 크기 키우기 */
     font-size: 2.2rem;  /* 글자 크기 키우기 */
-    padding: 30px 25px;
+    padding: 25px 25px;
     border-radius: 30px;
   }
 
@@ -396,7 +396,7 @@ h2 {
     width: fit-content;  /* 내용 크기에 맞게 */
     margin: 0 auto;      /* 화면 중앙 배치 */
     position: absolute;
-    top: 40%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -405,14 +405,15 @@ h2 {
   }
 
   #options button {
-    width: 180px;       /* 버튼 폭 줄이기 */
-    height: 70px;       /* 버튼 높이 줄이기 */
+    width: 165px;       /* 버튼 폭 줄이기 */
+    height: 60px;       /* 버튼 높이 줄이기 */
     padding: 10px;      /* 내부 여백 줄이기 */
-    font-size: 1.2rem;  /* 글자 크기 줄이기 */
+    font-size: 1.1rem;  /* 글자 크기 줄이기 */
   }
 
   /* 5단계 물음표 표시 크기 줄이기 */
   #clockDisplay.question {
     font-size: 4rem;   /* 기존보다 작게 */
+    margin-top: 10px
   }
 }
