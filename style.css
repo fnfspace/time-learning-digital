@@ -396,7 +396,7 @@ h2 {
     width: fit-content;  /* 내용 크기에 맞게 */
     margin: 0 auto;      /* 화면 중앙 배치 */
     position: absolute;
-    top: 48%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
